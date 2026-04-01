@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Статус сервера</title>
+  <style>
+    :root {
+      --bg:     #0f1117;
+      --card:   #1a1d27;
+      --border: #2a2d3a;
+      --text:   #e2e4ed;
+      --muted:  #6b7090;
+      --green:  #22c55e;
+      --amber:  #f59e0b;
+      --red:    #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    header {
+      max-width: 700px;
+      margin: 0 auto 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    h1 { font-size: 20px; font-weight: 600; }
+    h1 span { color: var(--muted); font-weight: 400; font-size: 15px; margin-left: 8px; }
+
+    #status-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 14px;
+    }
+
+    #status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--muted);
+      transition: background .4s;
+    }
+    #status-dot.online  { background: var(--green); box-shadow: 0 0 0 3px rgba(34,197,94,.2); }
+    #status-dot.offline { background: var(--red);   box-shadow: 0 0 0 3px rgba(239,68,68,.2); }
+
+    .grid {
+      max-width: 700px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      transition: border-color .2s;
+    }
+    .card:hover { border-color: #3a3f55; }
+
+    .card-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .card-value {
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 12px;
+      transition: color .4s;
+    }
+
+    .bar-track {
+      height: 5px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      width: 0%;
+      transition: width .8s ease, background .4s;
+    }
+
+    .card-sub { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+    .card.wide {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0;
+      padding: 20px 0;
+    }
+    .wide-item { flex: 1; min-width: 130px; padding: 0 20px; }
+    .wide-divider { width: 1px; height: 40px; background: var(--border); flex-shrink: 0; }
+    .wide-val { font-size: 18px; font-weight: 600; margin-top: 4px; }
+
+    .skeleton { animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+    footer {
+      max-width: 700px;
+      margin: 24px auto 0;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>x96 mini <span>мониторинг</span></h1>
+  <div id="status-pill">
+    <div id="status-dot"></div>
+    <span id="status-text">Загрузка...</span>
+  </div>
+</header>
+
+<div class="grid">
+
+  <div class="card">
+    <div class="card-label">Процессор</div>
+    <div class="card-value skeleton" id="cpu-val">—</div>
+    <div class="bar-track"><div class="bar-fill" id="cpu-bar"></div></div>
+    <div class="card-sub">нагрузка</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Оперативная память</div>
+    <div class="card-value skeleton" id="ram-val">—</div>
+    <div class="bar-track"><div class="bar-fill" id="ram-bar"></div></div>
+    <div class="card-sub" id="ram-sub">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Температура</div>
+    <div class="card-value skeleton" id="temp-val">—</div>
+    <div class="bar-track"><div class="bar-fill" id="temp-bar"></div></div>
+    <div class="card-sub">CPU</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Диск</div>
+    <div class="card-value skeleton" id="disk-val">—</div>
+    <div class="bar-track"><div class="bar-fill" id="disk-bar"></div></div>
+    <div class="card-sub" id="disk-sub">—</div>
+  </div>
+
+  <div class="card wide">
+    <div class="wide-item">
+      <div class="card-label">Аптайм</div>
+      <div class="wide-val skeleton" id="uptime-val">—</div>
+    </div>
+    <div class="wide-divider"></div>
+    <div class="wide-item">
+      <div class="card-label">Последнее обновление</div>
+      <div class="wide-val skeleton" id="checked-val">—</div>
+    </div>
+    <div class="wide-divider"></div>
+    <div class="wide-item">
+      <div class="card-label">Следующее обновление</div>
+      <div class="wide-val" id="next-val">через 120 с</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Данные обновляются каждые 120 секунд · stats.json из GitHub</footer>
+
+<script>
+  // ─── Настройки ───────────────────────────────────────────────────
+  const GH_OWNER = "armbianlab";
+  const GH_REPO  = "armbianlab.github.io"; // например: mylogin.github.io
+  const GH_FILE  = "stats.json";
+  // ─────────────────────────────────────────────────────────────────
+
+  // Читаем raw-файл напрямую — без API, без авторизации, без лимитов
+  const RAW_URL = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${GH_FILE}`;
+
+  const REFRESH_SEC = 120;
+
+  function pickColor(pct) {
+    if (pct < 50) return "var(--green)";
+    if (pct < 80) return "var(--amber)";
+    return "var(--red)";
+  }
+
+  function tempColor(t) {
+    if (!t || t === 0) return "var(--muted)";
+    if (t < 50) return "var(--green)";
+    if (t < 70) return "var(--amber)";
+    return "var(--red)";
+  }
+
+  function applyBar(barId, valId, pct, col, text) {
+    document.getElementById(barId).style.cssText =
+      `width:${Math.min(pct, 100)}%;background:${col}`;
+    const el = document.getElementById(valId);
+    el.textContent = text;
+    el.style.color = col;
+    el.classList.remove("skeleton");
+  }
+
+  function formatDate(iso) {
+    try {
+      const d   = new Date(iso);
+      const pad = n => String(n).padStart(2, "0");
+      return `${pad(d.getDate())}.${pad(d.getMonth()+1)} `
+           + `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    } catch { return iso; }
+  }
+
+  async function fetchStats() {
+    try {
+      // ?t= — сброс CDN-кэша GitHub
+      const res = await fetch(RAW_URL + "?t=" + Date.now());
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const d = await res.json();
+
+      applyBar("cpu-bar",  "cpu-val",  d.cpu_percent,  pickColor(d.cpu_percent),  d.cpu_percent  + "%");
+      applyBar("ram-bar",  "ram-val",  d.ram_percent,  pickColor(d.ram_percent),  d.ram_percent  + "%");
+      applyBar("disk-bar", "disk-val", d.disk_percent, pickColor(d.disk_percent), d.disk_percent + "%");
+
+      document.getElementById("ram-sub").textContent  = `${d.ram_used_mb} / ${d.ram_total_mb} МБ`;
+      document.getElementById("disk-sub").textContent = `свободно: ${d.disk_free_gb} ГБ`;
+
+      const tc = tempColor(d.temp_c);
+      const tp = d.temp_c ? Math.min((d.temp_c / 90) * 100, 100) : 0;
+      applyBar("temp-bar", "temp-val", tp, tc, d.temp_c ? d.temp_c + "°C" : "н/д");
+
+      const up = document.getElementById("uptime-val");
+      up.textContent = d.uptime || "—";
+      up.classList.remove("skeleton");
+
+      const ch = document.getElementById("checked-val");
+      ch.textContent = formatDate(d.checked_utc);
+      ch.classList.remove("skeleton");
+
+      const dot  = document.getElementById("status-dot");
+      const text = document.getElementById("status-text");
+      dot.className    = d.status === "online" ? "online" : "offline";
+      text.textContent = d.status === "online" ? "Онлайн"  : "Офлайн";
+
+    } catch (e) {
+      document.getElementById("status-dot").className  = "offline";
+      document.getElementById("status-text").textContent = "Ошибка соединения";
+      console.error(e);
+    }
+  }
+
+  let cd = REFRESH_SEC;
+  setInterval(() => {
+    cd--;
+    if (cd <= 0) { cd = REFRESH_SEC; fetchStats(); }
+    document.getElementById("next-val").textContent = `через ${cd} с`;
+  }, 1000);
+
+  fetchStats();
+</script>
+</body>
+</html>
