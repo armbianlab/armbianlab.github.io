@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Статус сервера</title>
+  <title>Статус сервера | ArmbianLab</title>
   <style>
     :root {
       --bg:     #0f1117;
@@ -14,6 +14,7 @@
       --green:  #22c55e;
       --amber:  #f59e0b;
       --red:    #ef4444;
+      --tg:     #0088cc;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,15 +40,35 @@
     h1 { font-size: 20px; font-weight: 600; }
     h1 span { color: var(--muted); font-weight: 400; font-size: 15px; margin-left: 8px; }
 
-    #status-pill {
+    .header-actions {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    #status-pill, #tg-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       font-size: 13px;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 999px;
-      padding: 5px 14px;
+      padding: 6px 16px;
+      transition: all .2s ease;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    #tg-link:hover {
+      border-color: var(--tg);
+      background: rgba(0, 136, 204, 0.1);
+      transform: translateY(-1px);
+    }
+
+    #tg-link svg {
+      color: var(--tg);
     }
 
     #status-dot {
@@ -134,14 +155,21 @@
 
 <header>
   <h1>ArmbianLab <span>Мониторинг</span></h1>
-  <div id="status-pill">
-    <div id="status-dot"></div>
-    <span id="status-text">Загрузка...</span>
+  <div class="header-actions">
+    <a href="https://t.me/unvah" id="tg-link" target="_blank">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
+      </svg>
+      Заказать
+    </a>
+    <div id="status-pill">
+      <div id="status-dot"></div>
+      <span id="status-text">Загрузка...</span>
+    </div>
   </div>
 </header>
 
 <div class="grid">
-
   <div class="card">
     <div class="card-label">Процессор</div>
     <div class="card-value skeleton" id="cpu-val">—</div>
@@ -186,7 +214,6 @@
       <div class="wide-val" id="next-val">через 120 с</div>
     </div>
   </div>
-
 </div>
 
 <footer>Данные обновляются каждые 120 секунд · stats.json из GitHub</footer>
@@ -194,13 +221,11 @@
 <script>
   // ─── Настройки ───────────────────────────────────────────────────
   const GH_OWNER = "armbianlab";
-  const GH_REPO  = "armbianlab.github.io"; // например: mylogin.github.io
+  const GH_REPO  = "armbianlab.github.io"; 
   const GH_FILE  = "stats.json";
   // ─────────────────────────────────────────────────────────────────
 
-  // Читаем raw-файл напрямую — без API, без авторизации, без лимитов
   const RAW_URL = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${GH_FILE}`;
-
   const REFRESH_SEC = 120;
 
   function pickColor(pct) {
@@ -217,8 +242,7 @@
   }
 
   function applyBar(barId, valId, pct, col, text) {
-    document.getElementById(barId).style.cssText =
-      `width:${Math.min(pct, 100)}%;background:${col}`;
+    document.getElementById(barId).style.cssText = `width:${Math.min(pct, 100)}%;background:${col}`;
     const el = document.getElementById(valId);
     el.textContent = text;
     el.style.color = col;
@@ -236,7 +260,6 @@
 
   async function fetchStats() {
     try {
-      // ?t= — сброс CDN-кэша GitHub
       const res = await fetch(RAW_URL + "?t=" + Date.now());
       if (!res.ok) throw new Error("HTTP " + res.status);
       const d = await res.json();
