@@ -1,12 +1,12 @@
 {
-  "cpu_percent": 29.3,
-  "ram_percent": 29.1,
-  "ram_used_mb": 520,
+  "cpu_percent": 7.5,
+  "ram_percent": 28.2,
+  "ram_used_mb": 504,
   "ram_total_mb": 1788,
   "disk_percent": 49.1,
   "disk_free_gb": 6.9,
   "temp_c": 38,
-  "uptime": "2д 7ч 51мин",
-  "checked_utc": "2026-04-06T00:35:35Z",
+  "uptime": "2д 7ч 53мин",
+  "checked_utc": "2026-04-06T00:37:35Z",
   "status": "online"
 }
